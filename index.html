@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Jueguito pa mi bebé 💖</title>
+<title>Juego pal bebé 💖</title>
 
 <style>
 body{
@@ -18,6 +18,7 @@ canvas{
   touch-action:none;
 }
 
+/* HUD */
 #hud{
   position:absolute;
   top:10px;
@@ -26,6 +27,7 @@ canvas{
   font-size:18px;
 }
 
+/* MENSAJE ANIMADO (FIX MOBILE) */
 #message{
   position:absolute;
   top:120px;
@@ -33,7 +35,6 @@ canvas{
   text-align:center;
   font-size:26px;
   color:white;
-
   opacity:0;
   transform:scale(0.6);
 }
@@ -43,19 +44,12 @@ canvas{
 }
 
 @keyframes popMsg{
-  0%{
-    opacity:0;
-    transform:scale(0.6);
-  }
-  50%{
-    opacity:1;
-    transform:scale(1.3);
-  }
-  100%{
-    opacity:1;
-    transform:scale(1);
-  }
+  0%{opacity:0; transform:scale(0.6);}
+  50%{opacity:1; transform:scale(1.3);}
+  100%{opacity:1; transform:scale(1);}
 }
+
+/* GAME OVER */
 #gameOver{
   position:absolute;
   top:50%;
@@ -72,6 +66,7 @@ button{
   border-radius:8px;
 }
 
+/* CONTROLES */
 #joystick{
   position:absolute;
   bottom:30px;
@@ -133,7 +128,7 @@ function resize(){
 resize();
 window.addEventListener("resize",resize);
 
-// evitar zoom sin romper botones
+// evitar zoom sin romper UI
 canvas.style.touchAction="none";
 
 let score=0,lives=3,bullets=[],enemies=[],isGameOver=false;
@@ -144,38 +139,40 @@ const player={x:canvas.width/2,y:canvas.height-100};
 const faceImg=new Image();
 faceImg.src="img/ella.png";
 
-// 💬 mensajes
+// 💬 MENSAJES
 const messages=[
 "Eres increíble ❤️",
-"Te ves hermosa jugando esto 💕",
-"Me encantas demasiado 😍",
-"Vas increíble 🔥",
-"No dejes que me vaya 💖",
-"Eres lo mejor que tengo ❤️"
+"Me encantas 💕",
+"Vas muy bien 🔥",
+"No te rindas 💖",
+"Eres hermosa 😍",
+"Sigue así ❤️"
 ];
 
+// 💬 MOSTRAR MENSAJE (FIX REAL MOBILE)
 function showMessage(){
-  const msg = messages[Math.floor(Math.random()*messages.length)];
-  const el = document.getElementById("message");
+  const msg=messages[Math.floor(Math.random()*messages.length)];
+  const el=document.getElementById("message");
 
-  el.innerText = msg;
+  el.innerText=msg;
 
-  // 🔥 resetear animación correctamente
   el.classList.remove("show");
-
-  // forzar reflow (clave en móviles)
-  void el.offsetWidth;
+  void el.offsetWidth; // 🔥 FORZAR REPAINT (CLAVE)
 
   el.classList.add("show");
 
-  // ocultar después
+  // vibración (si existe)
+  if(navigator.vibrate){
+    navigator.vibrate(50);
+  }
+
   setTimeout(()=>{
-    el.style.opacity = 0;
     el.classList.remove("show");
+    el.style.opacity=0;
   },2000);
 }
 
-// ❤️ corazón
+// ❤️ CORAZÓN
 function drawHeart(x,y,size){
   ctx.fillStyle="red";
   ctx.beginPath();
@@ -187,7 +184,7 @@ function drawHeart(x,y,size){
   ctx.fill();
 }
 
-// imagen circular
+// IMAGEN CIRCULAR
 function drawCircle(img,x,y,size){
   ctx.save();
   ctx.beginPath();
@@ -197,7 +194,7 @@ function drawCircle(img,x,y,size){
   ctx.restore();
 }
 
-// disparo
+// DISPARO
 function shoot(){
   if(!isGameOver){
     bullets.push({x:player.x,y:player.y});
@@ -205,11 +202,14 @@ function shoot(){
 }
 
 document.getElementById("shootBtn").addEventListener("pointerdown",shoot);
+
+// REINICIAR
 document.getElementById("restartBtn").addEventListener("pointerdown",restartGame);
 
-// enemigos
+// ENEMIGOS
 function spawnEnemy(){
   if(isGameOver)return;
+
   enemies.push({
     x:Math.random()*(canvas.width-80),
     y:-80,
@@ -224,7 +224,7 @@ function updateHUD(){
   document.getElementById("hud").innerText=`Puntos: ${score} | ❤️ Vidas: ${lives}`;
 }
 
-// perder vida
+// VIDA
 function loseLife(){
   lives--;
   updateHUD();
@@ -234,12 +234,9 @@ function loseLife(){
     document.getElementById("gameOver").style.display="block";
     document.getElementById("finalScore").innerText=`Puntuación: ${score}`;
   }
-  if(score % 10 === 0){
-  showMessage();
-}
 }
 
-// lógica
+// UPDATE
 function update(){
   if(isGameOver)return;
 
@@ -253,18 +250,19 @@ function update(){
 
     bullets.forEach((b,bi)=>{
       if(b.x<e.x+e.size && b.x>e.x && b.y<e.y+e.size && b.y>e.y){
+
         enemies.splice(i,1);
         bullets.splice(bi,1);
 
         score++;
         updateHUD();
 
-        // 💬 mensaje cada 10 puntos
+        // 💬 MENSAJE
         if(score%10===0){
           showMessage();
         }
 
-        // ⚡ dificultad
+        // ⚡ DIFICULTAD
         if(score%15===0){
           speedMultiplier+=0.3;
         }
@@ -277,12 +275,12 @@ function update(){
     }
   });
 
-  // límite pantalla
+  // 🔒 límite pantalla
   const margin=30;
   player.x=Math.max(margin,Math.min(canvas.width-margin,player.x));
 }
 
-// dibujo
+// DRAW
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -293,7 +291,7 @@ function draw(){
   enemies.forEach(e=>drawCircle(faceImg,e.x,e.y,e.size));
 }
 
-// loop
+// LOOP
 function loop(){
   update();
   draw();
@@ -301,7 +299,7 @@ function loop(){
 }
 loop();
 
-// reiniciar
+// RESET
 function restartGame(){
   score=0;
   lives=3;
@@ -314,18 +312,19 @@ function restartGame(){
   updateHUD();
 }
 
-// joystick
+// JOYSTICK
 const stick=document.getElementById("stick");
 const joystick=document.getElementById("joystick");
 
 joystick.addEventListener("pointermove",(e)=>{
   const rect=joystick.getBoundingClientRect();
+
   let x=e.clientX-rect.left-50;
   let max=40;
 
   x=Math.max(-max,Math.min(max,x));
-  stick.style.left=(x+30)+"px";
 
+  stick.style.left=(x+30)+"px";
   player.x+=x*0.25;
 });
 
