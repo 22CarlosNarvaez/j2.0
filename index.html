@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Jueguito pal bebé💖</title>
+<title>Jueguito pal bebé 💖</title>
 <style>
 body {
   margin:0;
@@ -178,13 +178,41 @@ function update(){
       enemies.splice(i,1); loseLife();
     }
   });
+
+  // limitar jugador dentro de la pantalla (iPhone incluido)
+  const margin = 30;
+  if(player.x < margin) player.x = margin;
+  if(player.x > canvas.width - margin) player.x = canvas.width - margin;
+});
+
+  enemies.forEach((e,i)=>{
+    e.y+=e.speed;
+
+    bullets.forEach((b,bi)=>{
+      if(b.x<e.x+e.size && b.x>e.x && b.y<e.y+e.size && b.y>e.y){
+        enemies.splice(i,1);
+        bullets.splice(bi,1);
+        score++;
+        updateHUD();
+
+        if(score%10===0) showMessage();
+        if(score%15===0) speedMultiplier+=0.3;
+      }
+    });
+
+    if(e.y>canvas.height){ enemies.splice(i,1); loseLife(); }
+
+    if(player.x<e.x+e.size && player.x>e.x && player.y<e.y+e.size && player.y>e.y){
+      enemies.splice(i,1); loseLife();
+    }
+  });
 }
 
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   // corazón mucho más grande (casi como enemigos)
-  drawHeart(player.x,player.y,40,"red");
+  drawHeart(player.x,player.y,30,"red");
 
   bullets.forEach(b=>drawHeart(b.x,b.y,14,"red"));
 
