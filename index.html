@@ -142,11 +142,10 @@ faceImg.src="img/ella.png";
 // 💬 MENSAJES
 const messages=[
 "Eres increíble ❤️",
-"Me encantas 💕",
-"Vas muy bien 🔥",
-"No te rindas 💖",
-"Eres hermosa 😍",
-"Sigue así ❤️"
+"Pndja te amo 💕",
+"Y vos ser tan linda?:3",
+"Hermosaaa<3",
+
 ];
 
 // 💬 MOSTRAR MENSAJE (FIX REAL MOBILE)
@@ -313,23 +312,48 @@ function restartGame(){
 }
 
 // JOYSTICK
-const stick=document.getElementById("stick");
-const joystick=document.getElementById("joystick");
+const stick = document.getElementById("stick");
+const joystick = document.getElementById("joystick");
 
-joystick.addEventListener("pointermove",(e)=>{
-  const rect=joystick.getBoundingClientRect();
+let isDragging = false;
 
-  let x=e.clientX-rect.left-50;
-  let max=40;
-
-  x=Math.max(-max,Math.min(max,x));
-
-  stick.style.left=(x+30)+"px";
-  player.x+=x*0.25;
+// cuando toca el joystick
+joystick.addEventListener("pointerdown", (e) => {
+  isDragging = true;
 });
 
-joystick.addEventListener("pointerup",()=>{
-  stick.style.left="30px";
+// cuando se mueve
+window.addEventListener("pointermove", (e) => {
+  if(!isDragging) return;
+
+  const rect = joystick.getBoundingClientRect();
+
+  let x = e.clientX - rect.left - 50;
+  let y = e.clientY - rect.top - 50;
+
+  const max = 40;
+
+  // limitar dentro del círculo
+  const distance = Math.sqrt(x*x + y*y);
+  if(distance > max){
+    x = (x / distance) * max;
+    y = (y / distance) * max;
+  }
+
+  stick.style.left = (x + 30) + "px";
+  stick.style.top = (y + 30) + "px";
+
+  // mover jugador (solo eje X)
+  player.x += x * 0.15;
+});
+
+// cuando suelta (MUY IMPORTANTE)
+window.addEventListener("pointerup", () => {
+  isDragging = false;
+
+  // regresar al centro
+  stick.style.left = "30px";
+  stick.style.top = "30px";
 });
 
 updateHUD();
