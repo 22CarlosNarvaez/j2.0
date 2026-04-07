@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Jueguito pal bebé 💖</title>
+<title>Jueguito pal bebé💖</title>
 <style>
 body {
   margin:0;
@@ -60,7 +60,7 @@ button { padding:10px 20px; border:none; border-radius:8px; }
 <div id="gameOver">
   <div>💔 Game Over</div>
   <div id="finalScore"></div>
-  <button onclick="restartGame()">Reintentar</button>
+  <button id="restartBtn">Reintentar</button>
 </div>
 
 <div id="joystick"><div id="stick"></div></div>
@@ -145,6 +145,13 @@ function updateHUD(){
 
 function loseLife(){
   lives--; updateHUD();
+
+// botón reiniciar compatible con celular
+document.getElementById("restartBtn").addEventListener("click", restartGame);
+document.getElementById("restartBtn").addEventListener("touchstart", (e)=>{
+  e.preventDefault();
+  restartGame();
+}, {passive:false});
   if(lives<=0){
     isGameOver=true;
     document.getElementById("gameOver").style.display="block";
