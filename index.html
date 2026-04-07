@@ -109,12 +109,15 @@ button {
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
-// 🔥 SOLO bloquea zoom (NO rompe botones)
-window.addEventListener('gesturestart', e => e.preventDefault());
-window.addEventListener('dblclick', e => e.preventDefault());
+// 🔥 bloqueo de zoom correcto
+canvas.style.touchAction = "none";
 
 let score=0, lives=3, bullets=[], enemies=[], isGameOver=false;
 let speedMultiplier=1;
@@ -124,6 +127,7 @@ const player={ x:canvas.width/2, y:canvas.height-100 };
 const faceImg=new Image();
 faceImg.src="img/ella.png";
 
+// ❤️ corazón
 function drawHeart(x,y,size){
   ctx.fillStyle="red";
   ctx.beginPath();
@@ -135,6 +139,7 @@ function drawHeart(x,y,size){
   ctx.fill();
 }
 
+// 🔵 imagen circular
 function drawCircleImage(img,x,y,size){
   ctx.save();
   ctx.beginPath();
@@ -144,23 +149,23 @@ function drawCircleImage(img,x,y,size){
   ctx.restore();
 }
 
-function shoot(e){
-  if(e) e.preventDefault();
-  if(!isGameOver) bullets.push({x:player.x,y:player.y});
+// 🔫 disparo universal (touch + mouse + stylus)
+function shoot(){
+  if(!isGameOver){
+    bullets.push({x:player.x,y:player.y});
+  }
 }
 
-document.getElementById("shootBtn").addEventListener("touchstart",shoot,{passive:false});
-document.getElementById("shootBtn").addEventListener("click",shoot);
+const shootBtn=document.getElementById("shootBtn");
+shootBtn.addEventListener("pointerdown", shoot);
 
-document.getElementById("restartBtn").addEventListener("touchstart",(e)=>{
-  e.preventDefault();
-  restartGame();
-},{passive:false});
-
-document.getElementById("restartBtn").addEventListener("click",restartGame);
+// 🔁 reiniciar universal
+const restartBtn=document.getElementById("restartBtn");
+restartBtn.addEventListener("pointerdown", restartGame);
 
 function spawnEnemy(){
   if(isGameOver) return;
+
   enemies.push({
     x:Math.random()*(canvas.width-80),
     y:-80,
@@ -177,6 +182,7 @@ function updateHUD(){
 function loseLife(){
   lives--;
   updateHUD();
+
   if(lives<=0){
     isGameOver=true;
     document.getElementById("gameOver").style.display="block";
@@ -212,10 +218,9 @@ function update(){
     }
   });
 
-  // 🔥 límite de pantalla (iPhone seguro)
+  // 🔥 límite pantalla (universal)
   const margin=30;
-  if(player.x<margin) player.x=margin;
-  if(player.x>canvas.width-margin) player.x=canvas.width-margin;
+  player.x=Math.max(margin, Math.min(canvas.width-margin, player.x));
 }
 
 function draw(){
@@ -247,28 +252,27 @@ function restartGame(){
   updateHUD();
 }
 
+// 🎮 joystick mejorado (pointer events)
 const stick=document.getElementById("stick");
 const joystick=document.getElementById("joystick");
 
-joystick.addEventListener("touchmove",(e)=>{
+joystick.addEventListener("pointermove",(e)=>{
   const rect=joystick.getBoundingClientRect();
-  const touch=e.touches[0];
 
-  let x=touch.clientX-rect.left-50;
+  let x=e.clientX-rect.left-50;
   let max=40;
 
   x=Math.max(-max,Math.min(max,x));
 
   stick.style.left=(x+30)+"px";
-  player.x+=x*0.2;
-},{passive:false});
+  player.x+=x*0.25;
+});
 
-joystick.addEventListener("touchend",()=>{
+joystick.addEventListener("pointerup",()=>{
   stick.style.left="30px";
 });
 
 updateHUD();
 </script>
-
 </body>
 </html>
