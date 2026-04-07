@@ -33,16 +33,29 @@ canvas{
   text-align:center;
   font-size:26px;
   color:white;
+
   opacity:0;
-  transform:scale(0.5);
-  transition:all 0.4s ease;
+  transform:scale(0.6);
 }
 
 #message.show{
-  opacity:1;
-  transform:scale(1.2);
+  animation: popMsg 0.6s ease forwards;
 }
 
+@keyframes popMsg{
+  0%{
+    opacity:0;
+    transform:scale(0.6);
+  }
+  50%{
+    opacity:1;
+    transform:scale(1.3);
+  }
+  100%{
+    opacity:1;
+    transform:scale(1);
+  }
+}
 #gameOver{
   position:absolute;
   top:50%;
@@ -142,13 +155,22 @@ const messages=[
 ];
 
 function showMessage(){
-  const msg=messages[Math.floor(Math.random()*messages.length)];
-  const el=document.getElementById("message");
+  const msg = messages[Math.floor(Math.random()*messages.length)];
+  const el = document.getElementById("message");
 
-  el.innerText=msg;
+  el.innerText = msg;
+
+  // 🔥 resetear animación correctamente
+  el.classList.remove("show");
+
+  // forzar reflow (clave en móviles)
+  void el.offsetWidth;
+
   el.classList.add("show");
 
+  // ocultar después
   setTimeout(()=>{
+    el.style.opacity = 0;
     el.classList.remove("show");
   },2000);
 }
@@ -212,6 +234,9 @@ function loseLife(){
     document.getElementById("gameOver").style.display="block";
     document.getElementById("finalScore").innerText=`Puntuación: ${score}`;
   }
+  if(score % 10 === 0){
+  showMessage();
+}
 }
 
 // lógica
