@@ -28,7 +28,6 @@ canvas {
   text-shadow:1px 1px 3px black;
 }
 
-/* 💬 MENSAJE ANIMADO */
 #message {
   position:absolute;
   top:80px;
@@ -61,31 +60,28 @@ canvas {
 }
 
 button {
-  padding:10px 20px;
   border:none;
-  border-radius:8px;
+  border-radius:10px;
 }
 
-#joystick {
+/* 🔘 FLECHAS */
+#controls {
   position:absolute;
   bottom:30px;
   left:30px;
-  width:100px;
-  height:100px;
-  background:rgba(255,255,255,0.2);
-  border-radius:50%;
+  display:flex;
+  gap:20px;
 }
 
-#stick {
-  width:40px;
-  height:40px;
-  background:white;
-  border-radius:50%;
-  position:absolute;
-  top:30px;
-  left:30px;
+.ctrlBtn {
+  width:70px;
+  height:70px;
+  font-size:30px;
+  background:rgba(255,255,255,0.3);
+  color:white;
 }
 
+/* disparo */
 #shootBtn {
   position:absolute;
   bottom:40px;
@@ -111,7 +107,12 @@ button {
   <button id="restartBtn">Reintentar</button>
 </div>
 
-<div id="joystick"><div id="stick"></div></div>
+<!-- 🎮 FLECHAS -->
+<div id="controls">
+  <button class="ctrlBtn" id="leftBtn">⬅️</button>
+  <button class="ctrlBtn" id="rightBtn">➡️</button>
+</div>
+
 <button id="shootBtn">💘</button>
 
 <canvas id="gameCanvas"></canvas>
@@ -172,7 +173,7 @@ function drawHeart(x,y,size){
   ctx.fill();
 }
 
-/* imagen circular */
+/* imagen */
 function drawCircleImage(img,x,y,size){
   ctx.save();
   ctx.beginPath();
@@ -188,12 +189,12 @@ function shoot(){
     bullets.push({x:player.x,y:player.y});
   }
 }
-
 document.getElementById("shootBtn").addEventListener("pointerdown", shoot);
 
-/* reiniciar */
+/* reinicio */
 document.getElementById("restartBtn").addEventListener("pointerdown", restartGame);
 
+/* enemigos */
 function spawnEnemy(){
   if(isGameOver)return;
 
@@ -221,8 +222,23 @@ function loseLife(){
   }
 }
 
+/* 🎮 CONTROL FLECHAS */
+let moveLeft=false;
+let moveRight=false;
+
+document.getElementById("leftBtn").addEventListener("pointerdown", ()=>moveLeft=true);
+document.getElementById("rightBtn").addEventListener("pointerdown", ()=>moveRight=true);
+
+window.addEventListener("pointerup", ()=>{
+  moveLeft=false;
+  moveRight=false;
+});
+
 function update(){
   if(isGameOver)return;
+
+  if(moveLeft) player.x -= 5;
+  if(moveRight) player.x += 5;
 
   bullets.forEach((b,i)=>{
     b.y-=8;
@@ -264,9 +280,7 @@ function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   drawHeart(player.x,player.y,30);
-
   bullets.forEach(b=>drawHeart(b.x,b.y,12));
-
   enemies.forEach(e=>drawCircleImage(faceImg,e.x,e.y,e.size));
 }
 
@@ -289,35 +303,8 @@ function restartGame(){
   updateHUD();
 }
 
-/* 🎮 JOYSTICK FIX REAL */
-const stick=document.getElementById("stick");
-const joystick=document.getElementById("joystick");
-
-let dragging=false;
-
-joystick.addEventListener("pointerdown", ()=> dragging=true);
-
-window.addEventListener("pointermove",(e)=>{
-  if(!dragging)return;
-
-  const rect=joystick.getBoundingClientRect();
-
-  let x=e.clientX-rect.left-50;
-  let max=40;
-
-  x=Math.max(-max,Math.min(max,x));
-
-  stick.style.left=(x+30)+"px";
-
-  player.x+=x*0.15;
-});
-
-window.addEventListener("pointerup",()=>{
-  dragging=false;
-  stick.style.left="30px";
-});
-
 updateHUD();
 </script>
+
 </body>
 </html>
