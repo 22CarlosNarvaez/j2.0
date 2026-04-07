@@ -2,10 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Juego Romántico 💖</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jueguito 💖</title>
 <style>
-body { margin:0; overflow:hidden; background:#ffb6c1; font-family:Arial; touch-action:none; }
+body { margin:0; overflow:hidden; background:#ffb6c1; font-family:Arial; }
 canvas { display:block; }
 
 #hud { position:absolute; top:10px; left:10px; color:white; font-size:18px; text-shadow:1px 1px 3px black; }
@@ -23,6 +23,7 @@ canvas { display:block; }
 
 button { padding:10px 20px; border:none; border-radius:8px; }
 
+/* joystick */
 #joystick {
   position:absolute; bottom:30px; left:30px;
   width:100px; height:100px;
@@ -112,20 +113,17 @@ function showMessage(){
   setTimeout(()=>el.style.opacity=0,2000);
 }
 
-function shoot(e){
-  if(e) e.preventDefault();
-  if(!isGameOver) bullets.push({x:player.x,y:player.y});
-}
+function shoot(){ if(!isGameOver) bullets.push({x:player.x,y:player.y}); }
 
-document.getElementById("shootBtn").addEventListener("touchstart",shoot,{passive:false});
+document.getElementById("shootBtn").addEventListener("touchstart",shoot);
 document.getElementById("shootBtn").addEventListener("click",shoot);
 
 function spawnEnemy(){
   if(isGameOver) return;
   enemies.push({
-    x:Math.random()*(canvas.width-60),
-    y:-60,
-    size:70,
+    x:Math.random()*(canvas.width-50),
+    y:-50,
+    size:60,
     speed:(2+Math.random()*2)*speedMultiplier
   });
 }
@@ -147,7 +145,7 @@ function loseLife(){
 function update(){
   if(isGameOver) return;
 
-  bullets.forEach((b,i)=>{ b.y-=7; if(b.y<0) bullets.splice(i,1); });
+  bullets.forEach((b,i)=>{ b.y-=6; if(b.y<0) bullets.splice(i,1); });
 
   enemies.forEach((e,i)=>{
     e.y+=e.speed;
@@ -175,12 +173,8 @@ function update(){
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // corazón más grande
-  drawHeart(player.x,player.y,28,"red");
-
-  // balas más grandes
-  bullets.forEach(b=>drawHeart(b.x,b.y,10,"red"));
-
+  drawHeart(player.x,player.y,15,"red");
+  bullets.forEach(b=>drawHeart(b.x,b.y,6,"red"));
   enemies.forEach(e=>drawCircleImage(faceImg,e.x,e.y,e.size));
 }
 
@@ -194,19 +188,19 @@ function restartGame(){
   updateHUD();
 }
 
+// joystick control
 const stick=document.getElementById("stick");
 const joystick=document.getElementById("joystick");
 
 joystick.addEventListener("touchmove",(e)=>{
-  e.preventDefault();
   const rect=joystick.getBoundingClientRect();
   const touch=e.touches[0];
   let x=touch.clientX-rect.left-50;
   let max=40;
   x=Math.max(-max,Math.min(max,x));
   stick.style.left=(x+30)+"px";
-  player.x+=x*0.15;
-},{passive:false});
+  player.x+=x*0.1;
+});
 
 joystick.addEventListener("touchend",()=>{
   stick.style.left="30px";
