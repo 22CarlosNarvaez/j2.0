@@ -3,55 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Jueguito pa mi bebé 💖</title>
+<title>Juego pal bebé 💖</title>
+
 <style>
 body {
   margin:0;
   overflow:hidden;
   background:#ffb6c1;
   font-family:Arial;
-  touch-action:none;
   -webkit-user-select:none;
-  -webkit-touch-callout:none;
 }
-canvas { display:block; }
 
-#hud { position:absolute; top:10px; left:10px; color:white; font-size:18px; text-shadow:1px 1px 3px black; }
+canvas {
+  display:block;
+  touch-action:none; /* 🔥 evita zoom SOLO en el juego */
+}
+
+#hud {
+  position:absolute;
+  top:10px;
+  left:10px;
+  color:white;
+  font-size:18px;
+  text-shadow:1px 1px 3px black;
+}
 
 #message {
-  position:absolute; top:80px; width:100%; text-align:center;
-  font-size:24px; color:white; text-shadow:2px 2px 5px black;
-  opacity:0; transition:opacity 0.5s;
+  position:absolute;
+  top:80px;
+  width:100%;
+  text-align:center;
+  font-size:24px;
+  color:white;
+  opacity:0;
+  transition:0.5s;
 }
 
 #gameOver {
-  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-  color:white; font-size:28px; text-align:center; display:none;
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  color:white;
+  text-align:center;
+  display:none;
 }
 
-button { padding:10px 20px; border:none; border-radius:8px; }
+button {
+  padding:10px 20px;
+  border:none;
+  border-radius:8px;
+}
 
 #joystick {
-  position:absolute; bottom:30px; left:30px;
-  width:100px; height:100px;
+  position:absolute;
+  bottom:30px;
+  left:30px;
+  width:100px;
+  height:100px;
   background:rgba(255,255,255,0.2);
   border-radius:50%;
 }
 
 #stick {
-  width:40px; height:40px;
-  background:white; border-radius:50%;
-  position:absolute; top:30px; left:30px;
+  width:40px;
+  height:40px;
+  background:white;
+  border-radius:50%;
+  position:absolute;
+  top:30px;
+  left:30px;
 }
 
 #shootBtn {
-  position:absolute; bottom:40px; right:40px;
-  width:70px; height:70px;
-  background:red; border-radius:50%;
-  color:white; font-size:20px;
+  position:absolute;
+  bottom:40px;
+  right:40px;
+  width:70px;
+  height:70px;
+  background:red;
+  border-radius:50%;
+  color:white;
+  font-size:20px;
 }
 </style>
 </head>
+
 <body>
 
 <div id="hud">Puntos: 0 | ❤️ Vidas: 3</div>
@@ -60,7 +97,7 @@ button { padding:10px 20px; border:none; border-radius:8px; }
 <div id="gameOver">
   <div>💔 Game Over</div>
   <div id="finalScore"></div>
-  <button onclick="restartGame()">Reintentar</button>
+  <button id="restartBtn">Reintentar</button>
 </div>
 
 <div id="joystick"><div id="stick"></div></div>
@@ -71,34 +108,24 @@ button { padding:10px 20px; border:none; border-radius:8px; }
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// evitar zoom en iOS completamente
+// 🔥 SOLO bloquea zoom (NO rompe botones)
 window.addEventListener('gesturestart', e => e.preventDefault());
 window.addEventListener('dblclick', e => e.preventDefault());
-document.addEventListener('touchstart', e => e.preventDefault(), { passive:false });
 
 let score=0, lives=3, bullets=[], enemies=[], isGameOver=false;
-let speedMultiplier = 1;
-
-const messages=[
-"Eres increíble ❤️",
-"Estas pendeja la vdd pero te amo",
-"Eres lo mejor que me ha pasado 💕",
-"La verdad estas bien hermosa<3",
-"Pvta si pierdes ahora",
-"Llegaste re lejos, te amoooo",
-"Aún acá, no pense que lo jugarias tanto"
-];
+let speedMultiplier=1;
 
 const player={ x:canvas.width/2, y:canvas.height-100 };
 
 const faceImg=new Image();
 faceImg.src="img/ella.png";
 
-function drawHeart(x,y,size,color){
-  ctx.fillStyle=color;
+function drawHeart(x,y,size){
+  ctx.fillStyle="red";
   ctx.beginPath();
   ctx.moveTo(x,y);
   ctx.bezierCurveTo(x,y-size/2,x-size,y-size/2,x-size,y);
@@ -117,22 +144,26 @@ function drawCircleImage(img,x,y,size){
   ctx.restore();
 }
 
-function showMessage(){
-  const msg=messages[Math.floor(Math.random()*messages.length)];
-  const el=document.getElementById("message");
-  el.innerText=msg; el.style.opacity=1;
-  setTimeout(()=>el.style.opacity=0,2000);
+function shoot(e){
+  if(e) e.preventDefault();
+  if(!isGameOver) bullets.push({x:player.x,y:player.y});
 }
 
-function shoot(e){ if(e) e.preventDefault(); if(!isGameOver) bullets.push({x:player.x,y:player.y}); }
-
 document.getElementById("shootBtn").addEventListener("touchstart",shoot,{passive:false});
+document.getElementById("shootBtn").addEventListener("click",shoot);
+
+document.getElementById("restartBtn").addEventListener("touchstart",(e)=>{
+  e.preventDefault();
+  restartGame();
+},{passive:false});
+
+document.getElementById("restartBtn").addEventListener("click",restartGame);
 
 function spawnEnemy(){
   if(isGameOver) return;
   enemies.push({
-    x:Math.random()*(canvas.width-70),
-    y:-70,
+    x:Math.random()*(canvas.width-80),
+    y:-80,
     size:80,
     speed:(2+Math.random()*2)*speedMultiplier
   });
@@ -144,7 +175,8 @@ function updateHUD(){
 }
 
 function loseLife(){
-  lives--; updateHUD();
+  lives--;
+  updateHUD();
   if(lives<=0){
     isGameOver=true;
     document.getElementById("gameOver").style.display="block";
@@ -155,7 +187,10 @@ function loseLife(){
 function update(){
   if(isGameOver) return;
 
-  bullets.forEach((b,i)=>{ b.y-=8; if(b.y<0) bullets.splice(i,1); });
+  bullets.forEach((b,i)=>{
+    b.y-=8;
+    if(b.y<0) bullets.splice(i,1);
+  });
 
   enemies.forEach((e,i)=>{
     e.y+=e.speed;
@@ -167,36 +202,47 @@ function update(){
         score++;
         updateHUD();
 
-        if(score%10===0) showMessage();
         if(score%15===0) speedMultiplier+=0.3;
       }
     });
 
-    if(e.y>canvas.height){ enemies.splice(i,1); loseLife(); }
-
-    if(player.x<e.x+e.size && player.x>e.x && player.y<e.y+e.size && player.y>e.y){
-      enemies.splice(i,1); loseLife();
+    if(e.y>canvas.height){
+      enemies.splice(i,1);
+      loseLife();
     }
   });
+
+  // 🔥 límite de pantalla (iPhone seguro)
+  const margin=30;
+  if(player.x<margin) player.x=margin;
+  if(player.x>canvas.width-margin) player.x=canvas.width-margin;
 }
 
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // corazón mucho más grande (casi como enemigos)
-  drawHeart(player.x,player.y,40,"red");
+  drawHeart(player.x,player.y,30);
 
-  bullets.forEach(b=>drawHeart(b.x,b.y,14,"red"));
+  bullets.forEach(b=>drawHeart(b.x,b.y,12));
 
   enemies.forEach(e=>drawCircleImage(faceImg,e.x,e.y,e.size));
 }
 
-function gameLoop(){ update(); draw(); requestAnimationFrame(gameLoop); }
-
+function gameLoop(){
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
 gameLoop();
 
 function restartGame(){
-  score=0; lives=3; bullets=[]; enemies=[]; isGameOver=false; speedMultiplier=1;
+  score=0;
+  lives=3;
+  bullets=[];
+  enemies=[];
+  isGameOver=false;
+  speedMultiplier=1;
+
   document.getElementById("gameOver").style.display="none";
   updateHUD();
 }
@@ -205,12 +251,14 @@ const stick=document.getElementById("stick");
 const joystick=document.getElementById("joystick");
 
 joystick.addEventListener("touchmove",(e)=>{
-  e.preventDefault();
   const rect=joystick.getBoundingClientRect();
   const touch=e.touches[0];
+
   let x=touch.clientX-rect.left-50;
   let max=40;
+
   x=Math.max(-max,Math.min(max,x));
+
   stick.style.left=(x+30)+"px";
   player.x+=x*0.2;
 },{passive:false});
