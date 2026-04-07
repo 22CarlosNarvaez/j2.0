@@ -3,43 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Juego pal bebé 💖</title>
+<title>Jueguito pa mi bebé 💖</title>
 
 <style>
-body {
+body{
   margin:0;
   overflow:hidden;
   background:#ffb6c1;
   font-family:Arial;
-  -webkit-user-select:none;
 }
 
-canvas {
+canvas{
   display:block;
-  touch-action:none; /* 🔥 evita zoom SOLO en el juego */
+  touch-action:none;
 }
 
-#hud {
+#hud{
   position:absolute;
   top:10px;
   left:10px;
   color:white;
   font-size:18px;
-  text-shadow:1px 1px 3px black;
 }
 
-#message {
+#message{
   position:absolute;
-  top:80px;
+  top:120px;
   width:100%;
   text-align:center;
-  font-size:24px;
+  font-size:26px;
   color:white;
   opacity:0;
-  transition:0.5s;
+  transform:scale(0.5);
+  transition:all 0.4s ease;
 }
 
-#gameOver {
+#message.show{
+  opacity:1;
+  transform:scale(1.2);
+}
+
+#gameOver{
   position:absolute;
   top:50%;
   left:50%;
@@ -49,13 +53,13 @@ canvas {
   display:none;
 }
 
-button {
+button{
   padding:10px 20px;
   border:none;
   border-radius:8px;
 }
 
-#joystick {
+#joystick{
   position:absolute;
   bottom:30px;
   left:30px;
@@ -65,7 +69,7 @@ button {
   border-radius:50%;
 }
 
-#stick {
+#stick{
   width:40px;
   height:40px;
   background:white;
@@ -75,7 +79,7 @@ button {
   left:30px;
 }
 
-#shootBtn {
+#shootBtn{
   position:absolute;
   bottom:40px;
   right:40px;
@@ -106,26 +110,48 @@ button {
 <canvas id="gameCanvas"></canvas>
 
 <script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d");
 
-function resizeCanvas(){
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+function resize(){
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
 }
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+resize();
+window.addEventListener("resize",resize);
 
-// 🔥 bloqueo de zoom correcto
-canvas.style.touchAction = "none";
+// evitar zoom sin romper botones
+canvas.style.touchAction="none";
 
-let score=0, lives=3, bullets=[], enemies=[], isGameOver=false;
+let score=0,lives=3,bullets=[],enemies=[],isGameOver=false;
 let speedMultiplier=1;
 
-const player={ x:canvas.width/2, y:canvas.height-100 };
+const player={x:canvas.width/2,y:canvas.height-100};
 
 const faceImg=new Image();
 faceImg.src="img/ella.png";
+
+// 💬 mensajes
+const messages=[
+"Eres increíble ❤️",
+"Te ves hermosa jugando esto 💕",
+"Me encantas demasiado 😍",
+"Vas increíble 🔥",
+"No dejes que me vaya 💖",
+"Eres lo mejor que tengo ❤️"
+];
+
+function showMessage(){
+  const msg=messages[Math.floor(Math.random()*messages.length)];
+  const el=document.getElementById("message");
+
+  el.innerText=msg;
+  el.classList.add("show");
+
+  setTimeout(()=>{
+    el.classList.remove("show");
+  },2000);
+}
 
 // ❤️ corazón
 function drawHeart(x,y,size){
@@ -139,8 +165,8 @@ function drawHeart(x,y,size){
   ctx.fill();
 }
 
-// 🔵 imagen circular
-function drawCircleImage(img,x,y,size){
+// imagen circular
+function drawCircle(img,x,y,size){
   ctx.save();
   ctx.beginPath();
   ctx.arc(x+size/2,y+size/2,size/2,0,Math.PI*2);
@@ -149,23 +175,19 @@ function drawCircleImage(img,x,y,size){
   ctx.restore();
 }
 
-// 🔫 disparo universal (touch + mouse + stylus)
+// disparo
 function shoot(){
   if(!isGameOver){
     bullets.push({x:player.x,y:player.y});
   }
 }
 
-const shootBtn=document.getElementById("shootBtn");
-shootBtn.addEventListener("pointerdown", shoot);
+document.getElementById("shootBtn").addEventListener("pointerdown",shoot);
+document.getElementById("restartBtn").addEventListener("pointerdown",restartGame);
 
-// 🔁 reiniciar universal
-const restartBtn=document.getElementById("restartBtn");
-restartBtn.addEventListener("pointerdown", restartGame);
-
+// enemigos
 function spawnEnemy(){
-  if(isGameOver) return;
-
+  if(isGameOver)return;
   enemies.push({
     x:Math.random()*(canvas.width-80),
     y:-80,
@@ -175,10 +197,12 @@ function spawnEnemy(){
 }
 setInterval(spawnEnemy,1200);
 
+// HUD
 function updateHUD(){
   document.getElementById("hud").innerText=`Puntos: ${score} | ❤️ Vidas: ${lives}`;
 }
 
+// perder vida
 function loseLife(){
   lives--;
   updateHUD();
@@ -190,8 +214,9 @@ function loseLife(){
   }
 }
 
+// lógica
 function update(){
-  if(isGameOver) return;
+  if(isGameOver)return;
 
   bullets.forEach((b,i)=>{
     b.y-=8;
@@ -205,10 +230,19 @@ function update(){
       if(b.x<e.x+e.size && b.x>e.x && b.y<e.y+e.size && b.y>e.y){
         enemies.splice(i,1);
         bullets.splice(bi,1);
+
         score++;
         updateHUD();
 
-        if(score%15===0) speedMultiplier+=0.3;
+        // 💬 mensaje cada 10 puntos
+        if(score%10===0){
+          showMessage();
+        }
+
+        // ⚡ dificultad
+        if(score%15===0){
+          speedMultiplier+=0.3;
+        }
       }
     });
 
@@ -218,11 +252,12 @@ function update(){
     }
   });
 
-  // 🔥 límite pantalla (universal)
+  // límite pantalla
   const margin=30;
-  player.x=Math.max(margin, Math.min(canvas.width-margin, player.x));
+  player.x=Math.max(margin,Math.min(canvas.width-margin,player.x));
 }
 
+// dibujo
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -230,16 +265,18 @@ function draw(){
 
   bullets.forEach(b=>drawHeart(b.x,b.y,12));
 
-  enemies.forEach(e=>drawCircleImage(faceImg,e.x,e.y,e.size));
+  enemies.forEach(e=>drawCircle(faceImg,e.x,e.y,e.size));
 }
 
-function gameLoop(){
+// loop
+function loop(){
   update();
   draw();
-  requestAnimationFrame(gameLoop);
+  requestAnimationFrame(loop);
 }
-gameLoop();
+loop();
 
+// reiniciar
 function restartGame(){
   score=0;
   lives=3;
@@ -252,19 +289,18 @@ function restartGame(){
   updateHUD();
 }
 
-// 🎮 joystick mejorado (pointer events)
+// joystick
 const stick=document.getElementById("stick");
 const joystick=document.getElementById("joystick");
 
 joystick.addEventListener("pointermove",(e)=>{
   const rect=joystick.getBoundingClientRect();
-
   let x=e.clientX-rect.left-50;
   let max=40;
 
   x=Math.max(-max,Math.min(max,x));
-
   stick.style.left=(x+30)+"px";
+
   player.x+=x*0.25;
 });
 
@@ -274,5 +310,6 @@ joystick.addEventListener("pointerup",()=>{
 
 updateHUD();
 </script>
+
 </body>
 </html>
