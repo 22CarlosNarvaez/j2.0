@@ -16,7 +16,7 @@ body {
 
 canvas {
   display:block;
-  touch-action:none; /* 🔥 evita zoom SOLO en el juego */
+  touch-action:none;
 }
 
 #hud {
@@ -28,6 +28,7 @@ canvas {
   text-shadow:1px 1px 3px black;
 }
 
+/* 💬 MENSAJE ANIMADO */
 #message {
   position:absolute;
   top:80px;
@@ -36,7 +37,17 @@ canvas {
   font-size:24px;
   color:white;
   opacity:0;
-  transition:0.5s;
+  transform:scale(0.6);
+}
+
+#message.show{
+  animation: popMsg 0.6s ease forwards;
+}
+
+@keyframes popMsg{
+  0%{opacity:0; transform:scale(0.6);}
+  50%{opacity:1; transform:scale(1.3);}
+  100%{opacity:1; transform:scale(1);}
 }
 
 #gameOver {
@@ -116,9 +127,6 @@ function resizeCanvas(){
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-// 🔥 bloqueo de zoom correcto
-canvas.style.touchAction = "none";
-
 let score=0, lives=3, bullets=[], enemies=[], isGameOver=false;
 let speedMultiplier=1;
 
@@ -127,7 +135,32 @@ const player={ x:canvas.width/2, y:canvas.height-100 };
 const faceImg=new Image();
 faceImg.src="img/ella.png";
 
-// ❤️ corazón
+/* 💬 MENSAJES */
+const messages=[
+"Eres increíble ❤️",
+"Eres muy hermosa 😍",
+"Me encantas 💕",
+"Eres lo mejor 💖",
+"Tienes una sonrisa perfecta ✨",
+"Eres única ❤️"
+];
+
+function showMessage(){
+  const el=document.getElementById("message");
+  el.innerText=messages[Math.floor(Math.random()*messages.length)];
+
+  el.classList.remove("show");
+  void el.offsetWidth;
+  el.classList.add("show");
+
+  if(navigator.vibrate) navigator.vibrate(50);
+
+  setTimeout(()=>{
+    el.classList.remove("show");
+  },2000);
+}
+
+/* ❤️ corazón */
 function drawHeart(x,y,size){
   ctx.fillStyle="red";
   ctx.beginPath();
@@ -139,7 +172,7 @@ function drawHeart(x,y,size){
   ctx.fill();
 }
 
-// 🔵 imagen circular
+/* imagen circular */
 function drawCircleImage(img,x,y,size){
   ctx.save();
   ctx.beginPath();
@@ -149,22 +182,20 @@ function drawCircleImage(img,x,y,size){
   ctx.restore();
 }
 
-// 🔫 disparo universal (touch + mouse + stylus)
+/* disparo */
 function shoot(){
   if(!isGameOver){
     bullets.push({x:player.x,y:player.y});
   }
 }
 
-const shootBtn=document.getElementById("shootBtn");
-shootBtn.addEventListener("pointerdown", shoot);
+document.getElementById("shootBtn").addEventListener("pointerdown", shoot);
 
-// 🔁 reiniciar universal
-const restartBtn=document.getElementById("restartBtn");
-restartBtn.addEventListener("pointerdown", restartGame);
+/* reiniciar */
+document.getElementById("restartBtn").addEventListener("pointerdown", restartGame);
 
 function spawnEnemy(){
-  if(isGameOver) return;
+  if(isGameOver)return;
 
   enemies.push({
     x:Math.random()*(canvas.width-80),
@@ -191,7 +222,7 @@ function loseLife(){
 }
 
 function update(){
-  if(isGameOver) return;
+  if(isGameOver)return;
 
   bullets.forEach((b,i)=>{
     b.y-=8;
@@ -205,10 +236,17 @@ function update(){
       if(b.x<e.x+e.size && b.x>e.x && b.y<e.y+e.size && b.y>e.y){
         enemies.splice(i,1);
         bullets.splice(bi,1);
+
         score++;
         updateHUD();
 
-        if(score%15===0) speedMultiplier+=0.3;
+        if(score % 10 === 0){
+          showMessage();
+        }
+
+        if(score % 15 === 0){
+          speedMultiplier+=0.3;
+        }
       }
     });
 
@@ -218,9 +256,8 @@ function update(){
     }
   });
 
-  // 🔥 límite pantalla (universal)
   const margin=30;
-  player.x=Math.max(margin, Math.min(canvas.width-margin, player.x));
+  player.x=Math.max(margin,Math.min(canvas.width-margin,player.x));
 }
 
 function draw(){
@@ -252,11 +289,17 @@ function restartGame(){
   updateHUD();
 }
 
-// 🎮 joystick mejorado (pointer events)
+/* 🎮 JOYSTICK FIX REAL */
 const stick=document.getElementById("stick");
 const joystick=document.getElementById("joystick");
 
-joystick.addEventListener("pointermove",(e)=>{
+let dragging=false;
+
+joystick.addEventListener("pointerdown", ()=> dragging=true);
+
+window.addEventListener("pointermove",(e)=>{
+  if(!dragging)return;
+
   const rect=joystick.getBoundingClientRect();
 
   let x=e.clientX-rect.left-50;
@@ -265,10 +308,12 @@ joystick.addEventListener("pointermove",(e)=>{
   x=Math.max(-max,Math.min(max,x));
 
   stick.style.left=(x+30)+"px";
-  player.x+=x*0.25;
+
+  player.x+=x*0.15;
 });
 
-joystick.addEventListener("pointerup",()=>{
+window.addEventListener("pointerup",()=>{
+  dragging=false;
   stick.style.left="30px";
 });
 
