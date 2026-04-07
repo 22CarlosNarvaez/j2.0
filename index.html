@@ -80,11 +80,9 @@ window.addEventListener('dblclick', e => e.preventDefault());
 // evitar zoom sin bloquear botones
 window.addEventListener('gesturestart', e => e.preventDefault());
 window.addEventListener('dblclick', e => e.preventDefault());
-document.addEventListener('touchstart', (e) => {
-  if(e.target.tagName !== 'BUTTON'){
-    e.preventDefault();
-  }
-}, { passive:false });
+// evitar zoom sin romper el juego
+window.addEventListener('gesturestart', e => e.preventDefault());
+window.addEventListener('dblclick', e => e.preventDefault());
 
 let score=0, lives=3, bullets=[], enemies=[], isGameOver=false;
 let speedMultiplier = 1;
