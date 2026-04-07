@@ -77,7 +77,14 @@ canvas.height = window.innerHeight;
 // evitar zoom en iOS completamente
 window.addEventListener('gesturestart', e => e.preventDefault());
 window.addEventListener('dblclick', e => e.preventDefault());
-document.addEventListener('touchstart', e => e.preventDefault(), { passive:false });
+// evitar zoom sin bloquear botones
+window.addEventListener('gesturestart', e => e.preventDefault());
+window.addEventListener('dblclick', e => e.preventDefault());
+document.addEventListener('touchstart', (e) => {
+  if(e.target.tagName !== 'BUTTON'){
+    e.preventDefault();
+  }
+}, { passive:false });
 
 let score=0, lives=3, bullets=[], enemies=[], isGameOver=false;
 let speedMultiplier = 1;
@@ -187,7 +194,7 @@ function update(){
   });
 
   // limitar jugador dentro de la pantalla (iPhone incluido)
-  const margin = 30;
+  const margin = 35; // margen ajustado al tamaño del corazón en iPhone
   if(player.x < margin) player.x = margin;
   if(player.x > canvas.width - margin) player.x = canvas.width - margin;
 });
